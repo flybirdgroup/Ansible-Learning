@@ -1,0 +1,32 @@
+---
+- name: Update APT
+  hosts: alicloud
+  tasks:
+  - name: Update apt repo and cache
+    apt:  update_cache=yes force_apt_get=yes cache_valid_time=3600
+  - name: Install nodejs and npm
+    apt:
+      pkg:
+        - nodejs
+        - npm
+
+- name:  deploy nodejs app
+  hosts: alicloud
+  tasks: 
+    - name: Unpack the node js file
+      unarchive: 
+        src: /Users/flybird/Desktop/ANSIBLE/Ansible-Learning/developing-with-docker-1.0.0.tgz
+        dest: /root
+    - name: install node.js package
+      npm:
+        path: /root/package
+    - name: Start the application
+      command: 
+        chdir: /root/package
+        cmd: node server
+      async: 1000
+      poll: 0
+    - name: Eusure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}
