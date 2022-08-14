@@ -93,10 +93,14 @@
   vars_files:
   - project-vars
   tasks:
-    - name: Verify Nexus Process
-      command: ps aux | grep nexus
-      register: check_nexus_process
-    - debug: msg={{check_nexus_process}}
+    - name: check httpd status
+      shell:
+        ps aux | grep nexus
+      # 这里增加一个register关键字，下边是变量的名称
+      # register的作用是接收上一步shell模块的输出
+      register:
+        check_nexus
+    - debug: msg={{check_nexus}}
 
     - name: Wait one minute
       pause:
