@@ -1,0 +1,55 @@
+---
+- name: Update APT
+  hosts: alicloud
+  tasks:
+  - name: Update apt repo and cache
+    apt:  update_cache=yes force_apt_get=yes cache_valid_time=3600
+  - name: Install nodejs and npm
+    apt:
+      pkg:
+        - nodejs
+        - npm
+
+- name: Create Linux User for node app
+  hosts: alicloud
+  vars_files:
+    - project-vars
+  tasks:
+    - name: create a Linux user group
+      group: 
+        name: "{{group_name}}"
+        state: present
+    - name: create a linux user
+      user:
+        name: "{{user_name}}"
+        group: "{{group_name}}"
+
+- name:  deploy nodejs app
+  hosts: alicloud
+  become: True
+  become_user: "{{user_name}}"
+  vars_files:
+  - project-vars
+  tasks: 
+    - name: Unpack the node js file
+      unarchive: 
+        src: "{{node_artifact}}"
+        dest: /home/{{user_name}}
+    - name: install node.js package
+      npm:
+        path: /home/{{user_name}}/package
+    - name: Start the application
+      command: 
+        chdir: /home/{{user_name}}/package
+        cmd: node server
+      async: 1000
+      poll: 0
+    - name: Eusure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}
+
+### deploy node by root user
+### set values for yaml
+### ansible-playbook -i host playbook.yaml -e "variable=? variable=?"
+### use variable file var-files - variable file

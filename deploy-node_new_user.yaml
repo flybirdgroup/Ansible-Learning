@@ -10,19 +10,34 @@
         - nodejs
         - npm
 
+- name: Create Linux User for node app
+  hosts: alicloud
+  tasks:
+    - name: create a Linux user group
+      group: 
+        name: "{{user_name}}"
+        state: present
+    - name: create a linux user
+      user:
+        name: "{{user_name}}"
+        group: "{{user_name}}"
+
+
 - name:  deploy nodejs app
   hosts: alicloud
+  become: True
+  become_user: "{{user_name}}"
   tasks: 
     - name: Unpack the node js file
       unarchive: 
         src: /Users/flybird/Desktop/ANSIBLE/Ansible-Learning/developing-with-docker-1.0.0.tgz
-        dest: /root
+        dest: /home/"{{user_name}}"
     - name: install node.js package
       npm:
-        path: /root/package
+        path: /home/"{{user_name}}"/package
     - name: Start the application
       command: 
-        chdir: /root/package
+        chdir: /home/"{{user_name}}"/package
         cmd: node server
       async: 1000
       poll: 0
